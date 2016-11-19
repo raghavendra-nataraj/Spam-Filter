@@ -1,6 +1,6 @@
 import math
 import pprint
-import ModelNotEmptyException
+import ModelNotEmptyException, IncorrectModelFileException
 import operator
 
 
@@ -21,10 +21,10 @@ class Model:
             self.priors[spam_type] += 1
             words = text.split()
             for word in words:
-                if word in self.likelihood_counts[spam_type]:
-                    self.likelihood_counts[spam_type][word] += 1
+                if word.lower() in self.likelihood_counts[spam_type]:
+                    self.likelihood_counts[spam_type][word.lower()] += 1
                 else:
-                    self.likelihood_counts[spam_type][word] = 1
+                    self.likelihood_counts[spam_type][word.lower()] = 1
             if self.model_type == "dt":
                 # Do additional work here to create thresholds etc for decision tree model
                 pass
@@ -43,10 +43,10 @@ class Model:
             spam_result = 0
             for word in text.split():
                 curr_prob = (1.0 * 0.1) / spam_total_counts
-                if word in self.likelihood_counts["spam"]:
-                    curr_prob = (1.0 * self.likelihood_counts["spam"][word]) / spam_total_counts
-                if word not in self.posterior_probabilites["spam"]:
-                    self.posterior_probabilites["spam"][word] = curr_prob
+                if word.lower() in self.likelihood_counts["spam"]:
+                    curr_prob = (1.0 * self.likelihood_counts["spam"][word.lower()]) / spam_total_counts
+                if word.lower() not in self.posterior_probabilites["spam"]:
+                    self.posterior_probabilites["spam"][word.lower()] = curr_prob
                 spam_result += math.log(curr_prob)
             spam_result += math.log(spam_prior)
 
@@ -56,34 +56,36 @@ class Model:
             notspam_result = 0
             for word in text.split():
                 curr_prob = (1.0 * 0.1) / notspam_total_counts
-                if word in self.likelihood_counts["notspam"]:
-                    curr_prob = (1.0 * self.likelihood_counts["notspam"][word]) / notspam_total_counts
-                    if word not in self.posterior_probabilites["notspam"]:
-                        self.posterior_probabilites["notspam"][word] = curr_prob
+                if word.lower() in self.likelihood_counts["notspam"]:
+                    curr_prob = (1.0 * self.likelihood_counts["notspam"][word.lower()]) / notspam_total_counts
+                    if word.lower() not in self.posterior_probabilites["notspam"]:
+                        self.posterior_probabilites["notspam"][word.lower()] = curr_prob
                 notspam_result += math.log(curr_prob)
             notspam_result += math.log(notspam_prior)
 
             return spam_result / notspam_result
 
     def save(self, file_path):
+        print(file_path)
         with open(file_path, "w") as fp:
-            fp.write("Model:" + self.model_type)
-            fp.write("Priors:" + str(len(self.priors)))
+            fp.write("Model:" + self.model_type + "\n")
+            fp.write("Priors:" + str(len(self.priors)) + "\n")
             for prior, count in self.priors.iteritems():
-                fp.write(prior, count)
-            fp.write("LL:" + str(len(self.likelihood_counts["spam"]) + len(self.likelihood_counts["notspam"])))
+                fp.write(prior + ":" + str(count) + "\n")
+            fp.write("LL:" + str(len(self.likelihood_counts["spam"]) + len(self.likelihood_counts["notspam"])) + "\n")
             for prior, word_counts in self.likelihood_counts.iteritems():
-                for word, count in self.likelihood_counts.iteritems():
-                    fp.write(prior, word, count)
-            fp.close()
+                for word, count in word_counts.iteritems():
+                    fp.write(prior + ":" + word + ":" + str(count) + "\n")
 
-    def load(self, file_path):
+    def load(self, file_path, technique):
         if self.model_type is not None:
-            raise ModelNotEmptyException
+            raise ModelNotEmptyException.ModelNotEmptyException
         else:
-            with open(file_path, "w") as fp:
+            with open(file_path, "r") as fp:
                 content = [x.strip('\n') for x in fp.readlines()]
             model_row = content.pop(0)
+            if technique != model_row.split(":")[1]:
+                raise IncorrectModelFileException
             self.model_type = model_row.split(":")[1]
             while True:
                 next_row = content.pop()
