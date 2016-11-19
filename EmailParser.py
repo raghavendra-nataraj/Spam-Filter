@@ -22,6 +22,7 @@ class Parser:
 
     def parse(self, folder_path):
         current_files = [f for f in listdir(folder_path) if isfile(join(folder_path, f))]
+        email_texts = []
         for email_file in current_files:
             with open(folder_path + email_file, 'r') as fp:
                 result = self.prsr.parse(fp)
@@ -37,9 +38,10 @@ class Parser:
                     soup = BeautifulSoup.BeautifulSoup(current_message)
                     texts = soup.findAll(text=True)
                     visible_texts = filter(visible, texts)
-                    # print(visible_texts)
+                    string_texts = "".join([c.encode("UTF-8") for c in visible_texts])
+                    email_texts.append(re.sub("[ ]+", " ", re.sub("[^a-zA-Z0-9]", " ", string_texts)))
                     # text_message = html2text.html2text(current_message)
-                    print("".join([c.decode("UTF-8") for c in visible_texts if
-                                   c.decode("UTF-8") in string.letters or c.decode("UTF-8") in
-                                   string.whitespace]))
-                break
+                    # print("".join([c for c in string_texts if
+                    #              c in string.letters or c in
+                    #             string.whitespace]))
+        return email_texts
