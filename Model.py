@@ -1,4 +1,6 @@
 import math
+import sys
+import ModelNotEmptyException
 
 
 class Model:
@@ -7,7 +9,7 @@ class Model:
     likelihood_counts = {"spam": {}, "notspam": {}}
     minimum_ll = {"spam": 0.0000000001, "notspam": 0.0000000001}
 
-    def __init__(self, model_type="bayes"):
+    def __init__(self, model_type=None):
         self.model_type = model_type
 
     def train(self, *args, **kwds):
@@ -56,3 +58,33 @@ class Model:
             notspam_result += math.log(notspam_prior)
 
             return spam_result / notspam_result
+
+    def save(self, file_path):
+        with open(file_path, "w") as fp:
+            fp.write("Model:" + self.model_type)
+            fp.write("Priors:" + str(len(self.priors)))
+            for prior, count in self.priors.iteritems():
+                fp.write(prior, count)
+            fp.write("LL:" + str(len(self.likelihood_counts["spam"]) + len(self.likelihood_counts["notspam"])))
+            for prior, word_counts in self.likelihood_counts.iteritems():
+                for word, count in self.likelihood_counts.iteritems():
+                    fp.write(prior, word, count)
+            fp.close()
+
+    def load(self, file_path):
+        if self.model_type is not None:
+            raise ModelNotEmptyException
+        else:
+            with open(file_path, "w") as fp:
+                content = [x.strip('\n') for x in fp.readlines()]
+            model_row = content.pop(0)
+            self.model_type = model_row.split(":")[1]
+            while (True):
+                next_row = content.pop()
+                if "LL" in next_row[0]:
+                    break
+                split_value = next_row.split(":")
+                self.priors[split_value[0]] = split_value[1]
+            for likelihoods in content:
+                split_value = likelihoods.split(":")
+                self.likelihood_counts[split_value[0]][split_value[1]] = split_value[2]
