@@ -1,5 +1,9 @@
 import sys
 import os
+import Model
+import EmailParser
+from os import listdir
+from os.path import isfile, join
 
 MODES = {"train", "test"}
 TECHNIQUES = {"bayes", "dt"}
@@ -23,10 +27,14 @@ if not os.path.isdir(directory):
     print("Directory" + directory + " does not exist")
     sys.exit(4)
 else:
-    if not os.path.isdir(directory + "/spam"):
-        print("Directory" + directory + "/spam" + " does not exist")
+    if not os.path.isdir(directory + "/spam/"):
+        print("Directory" + directory + "/spam/" + " does not exist")
         sys.exit(5)
-    if not os.path.isdir(directory + "/notspam"):
-        print("Directory" + directory + "/notspam" + " does not exist")
+    if not os.path.isdir(directory + "/notspam/"):
+        print("Directory" + directory + "/notspam/" + " does not exist")
         sys.exit(6)
 
+model = Model.Model(tech)
+
+p = EmailParser.Parser()
+p.parse(directory + "/spam/")
