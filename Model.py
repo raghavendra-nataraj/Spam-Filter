@@ -1,6 +1,7 @@
 import math
-import sys
+import pprint
 import ModelNotEmptyException
+import operator
 
 
 class Model:
@@ -8,6 +9,7 @@ class Model:
     priors = {"spam": 0, "notspam": 0}
     likelihood_counts = {"spam": {}, "notspam": {}}
     minimum_ll = {"spam": 0.0000000001, "notspam": 0.0000000001}
+    posterior_probabilites = {"spam": {}, "notspam": {}}
 
     def __init__(self, model_type=None):
         self.model_type = model_type
@@ -43,6 +45,8 @@ class Model:
                 curr_prob = (1.0 * 0.1) / spam_total_counts
                 if word in self.likelihood_counts["spam"]:
                     curr_prob = (1.0 * self.likelihood_counts["spam"][word]) / spam_total_counts
+                if word not in self.posterior_probabilites["spam"]:
+                    self.posterior_probabilites["spam"][word] = curr_prob
                 spam_result += math.log(curr_prob)
             spam_result += math.log(spam_prior)
 
@@ -54,6 +58,8 @@ class Model:
                 curr_prob = (1.0 * 0.1) / notspam_total_counts
                 if word in self.likelihood_counts["notspam"]:
                     curr_prob = (1.0 * self.likelihood_counts["notspam"][word]) / notspam_total_counts
+                    if word not in self.posterior_probabilites["notspam"]:
+                        self.posterior_probabilites["notspam"][word] = curr_prob
                 notspam_result += math.log(curr_prob)
             notspam_result += math.log(notspam_prior)
 
@@ -79,7 +85,7 @@ class Model:
                 content = [x.strip('\n') for x in fp.readlines()]
             model_row = content.pop(0)
             self.model_type = model_row.split(":")[1]
-            while (True):
+            while True:
                 next_row = content.pop()
                 if "LL" in next_row[0]:
                     break
@@ -88,3 +94,12 @@ class Model:
             for likelihoods in content:
                 split_value = likelihoods.split(":")
                 self.likelihood_counts[split_value[0]][split_value[1]] = split_value[2]
+
+    def __str__(self):
+        if self.model_type == "bayes":
+            print("Top 10 words associated with spam (with strength of association):")
+            pprint.pprint(dict(sorted(self.posterior_probabilites["spam"].iteritems(), key=operator.itemgetter(1),
+                                      reverse=True)[:5]))
+            print("Top 10 words associated with non spam (with strength of association):")
+            pprint.pprint(dict(sorted(self.posterior_probabilites["notspam"].iteritems(), key=operator.itemgetter(1),
+                                      reverse=True)[:5]))
