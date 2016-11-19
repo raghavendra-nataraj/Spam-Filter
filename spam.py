@@ -29,3 +29,4 @@ else:
     if not os.path.isdir(directory + "/notspam"):
         print("Directory" + directory + "/notspam" + " does not exist")
         sys.exit(6)
+
