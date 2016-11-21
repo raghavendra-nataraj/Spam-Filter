@@ -37,7 +37,6 @@ else:
 p = EmailParser.Parser()
 spam_email_texts = p.parse(directory + "/spam/")
 non_spam_email_texts = p.parse(directory + "/notspam/")
-
 if mode == "train":
     model = Model.Model(tech)
     for text in spam_email_texts:
@@ -59,7 +58,9 @@ elif mode == "test":
         non_spam_ratios.append(model.test(text))
     false_positive = (1.0 * sum(i > 1 for i in non_spam_ratios))
     false_negative = len(spam_ratios) - false_positive
+    #print(model)
     print(true_positive)
     print(true_negative)
     print(false_positive)
     print(false_negative)
+

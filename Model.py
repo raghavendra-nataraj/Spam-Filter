@@ -2,7 +2,7 @@ import math
 import pprint
 import ModelNotEmptyException, IncorrectModelFileException
 import operator
-
+import re
 
 class Model:
     model_type = None
@@ -19,7 +19,7 @@ class Model:
             text = args[0]
             spam_type = args[1]
             self.priors[spam_type] += 1
-            words = text.split()
+            words = re.split(' |:|\.|,|\n',text)
             for word in words:
                 if word.lower() in self.likelihood_counts[spam_type]:
                     self.likelihood_counts[spam_type][word.lower()] += 1
@@ -37,20 +37,20 @@ class Model:
     # Return the odds ratio of spam log likelihood probability v non spam log likelihood
     def test(self, text):
         if self.model_type == "bayes":
-            spam_total_counts = sum(self.likelihood_counts["spam"].itervalues())
+            spam_total_counts = sum(self.likelihood_counts["spam"].itervalues())+0.1
             # spam_min_value = min(self.likelihood_counts["spam"].itervalues())
             spam_prior = self.priors["spam"]
             spam_result = 0
-            for word in text.split():
+            for word in re.split(' |:|\.|,|\n',text):
                 curr_prob = (1.0 * 0.1) / spam_total_counts
                 if word.lower() in self.likelihood_counts["spam"]:
                     curr_prob = (1.0 * self.likelihood_counts["spam"][word.lower()]) / spam_total_counts
                 if word.lower() not in self.posterior_probabilites["spam"]:
                     self.posterior_probabilites["spam"][word.lower()] = curr_prob
                 spam_result += math.log(curr_prob)
-            spam_result += math.log(spam_prior)
+            spam_result += math.log(float(spam_prior))
 
-            notspam_total_counts = sum(self.likelihood_counts["notspam"].itervalues())
+            notspam_total_counts = sum(self.likelihood_counts["notspam"].itervalues())+0.1
             # spam_min_value = min(self.likelihood_counts["spam"].itervalues())
             notspam_prior = self.priors["notspam"]
             notspam_result = 0
@@ -61,8 +61,7 @@ class Model:
                     if word.lower() not in self.posterior_probabilites["notspam"]:
                         self.posterior_probabilites["notspam"][word.lower()] = curr_prob
                 notspam_result += math.log(curr_prob)
-            notspam_result += math.log(notspam_prior)
-
+            notspam_result += math.log(float(notspam_prior))
             return spam_result / notspam_result
 
     def save(self, file_path):
@@ -88,20 +87,22 @@ class Model:
                 raise IncorrectModelFileException
             self.model_type = model_row.split(":")[1]
             while True:
-                next_row = content.pop()
-                if "LL" in next_row[0]:
+                next_row = content.pop(0)
+                if "LL" in next_row:
                     break
                 split_value = next_row.split(":")
-                self.priors[split_value[0]] = split_value[1]
+                self.priors[split_value[0]] = int(split_value[1])
             for likelihoods in content:
                 split_value = likelihoods.split(":")
-                self.likelihood_counts[split_value[0]][split_value[1]] = split_value[2]
+                self.likelihood_counts[split_value[0]][split_value[1]] = int(split_value[2])
 
     def __str__(self):
+    
         if self.model_type == "bayes":
             print("Top 10 words associated with spam (with strength of association):")
             pprint.pprint(dict(sorted(self.posterior_probabilites["spam"].iteritems(), key=operator.itemgetter(1),
-                                      reverse=True)[:5]))
+                                      reverse=True)[:10]))
             print("Top 10 words associated with non spam (with strength of association):")
             pprint.pprint(dict(sorted(self.posterior_probabilites["notspam"].iteritems(), key=operator.itemgetter(1),
-                                      reverse=True)[:5]))
+                                      reverse=True)[:10]))
+
