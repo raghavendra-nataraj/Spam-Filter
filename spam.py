@@ -52,6 +52,7 @@ if mode == "train":
 elif mode == "test":
     model = Model.Model()
     model.load(model_path, tech)
+    '''
     spam_ratios = []
     for text in spam_email_texts:
         spam_ratios.append(model.test(text))
@@ -67,4 +68,11 @@ elif mode == "test":
     print(true_negative)
     print(false_positive)
     print(false_negative)
-
+    '''
+    
+    for text in spam_email_texts:
+        print model.test(text)
+    for text in non_spam_email_texts:
+        print model.test(text)
+    
+    

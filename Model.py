@@ -11,7 +11,7 @@ from DecisionTree import DecisionTree
 sys.setrecursionlimit(9999)
 class Model:
     model_type = None
-    modet_tree = None
+    model_tree = None
     priors = {"spam": 0, "notspam": 0}
     likelihood_counts = {"spam": {}, "notspam": {}}
     minimum_ll = {"spam": 0.0000000001, "notspam": 0.0000000001}
@@ -123,7 +123,15 @@ class Model:
     def build_dt(self):
         return self.calcEntropy()
             
-        
+    def is_spam_or_not(self,words_list):
+        tempTree = self.model_tree
+        while isinstance(tempTree,DecisionTree):
+            if tempTree.root in words_list:
+                tempTree = tempTree.left
+            else:
+                tempTree = tempTree.right
+        return tempTree
+    
     # Return the odds ratio of spam log likelihood probability v non spam log likelihood
     def test(self, text):
         if self.model_type == "bayes":
@@ -153,6 +161,11 @@ class Model:
                 notspam_result += math.log(curr_prob)
             notspam_result += math.log(float(notspam_prior))
             return spam_result / notspam_result
+        else:
+            words_in_mail =  re.split(' |:|\.|,|\n',text)
+            result = self.is_spam_or_not(words_in_mail)
+            return result
+
 
     def save(self, file_path,tech,tree=None):
         print(file_path)
@@ -213,8 +226,9 @@ class Model:
                 raise ModelNotEmptyException.ModelNotEmptyException
             else:
                 with open(file_path, "r") as fp:
-                    tree = pickle.loads(fp.read())
-                    retrn tree
+                    self.model_tree = pickle.loads(fp.read())
+                    #print self.model_tree.left
+                    fp.close()
                         
                         
     
