@@ -43,7 +43,11 @@ if mode == "train":
         model.train(text, "spam")
     for text in non_spam_email_texts:
         model.train(text, "notspam")
-    model.save(model_path)
+    if tech=="dt":
+        tree = model.build_dt()
+        model.save(model_path,tech,tree)
+    else:
+        model.save(model_path,tech)
     print(model)
 elif mode == "test":
     model = Model.Model()
