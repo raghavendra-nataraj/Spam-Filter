@@ -40,7 +40,7 @@ class Parser:
                 soup = BeautifulSoup.BeautifulSoup(current_message)
                 texts = soup.findAll(text=True)
                 visible_texts = filter(visible, texts)
-                string_texts = "".join([c.encode("UTF-8") for c in visible_texts])
+                string_texts = "".join([c.encode("UTF-8").lower() for c in visible_texts])
                 email_texts.append(re.sub("[ ]+", " ", re.sub("[^a-zA-Z0-9]", " ", string_texts)))
             elif "plain" in ctype:
                 email_texts.append(result.get_payload())
