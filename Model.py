@@ -21,13 +21,14 @@ class Model:
     likelihood_costs = {"spam": {}, "notspam": {}}
     minimum_ll = {"spam": 0.0000000001, "notspam": 0.0000000001}
     DeTr = {"spam": [], "notspam": []}
-    words_list = set()
-
+    wordslist_g = set()
+    splitwords = set()
     def __init__(self, model_type=None):
         self.model_type = model_type
 
     def calculateEntropy(self,word,DT):
         word_exist_l = []
+        result = []
         word_nexist = 0.0
         word_spam_exist_l = []
         word_spam_nexist = 0.0
@@ -48,64 +49,85 @@ class Model:
             else:
                 word_nexist+=1
                 word_nspam_nexist+=1
-        
-        
-        word_exist = float(len(word_exist_l))
-        word_spam_exist = float(len(word_spam_exist_l))
-        word_nspam_exist = float(len(word_nspam_exist_l))
-        if word_spam_exist == 0:
-            entp_val_spam = 0.0
+        # possible issues
+        binary  = False
+        if binary:
+            word_iterList = [1]
         else:
-            entp_val_spam = (word_exist / tot_len) * \
-            (-1 * (word_spam_exist / word_exist) * math.log(word_spam_exist / float(word_exist)))
+            word_iterList = set(word_exist_l)
+        for num in word_iterList:
+            greater_s = [x for x in word_spam_exist_l if x>=num]
+            lesser_s = [x for x in word_spam_exist_l if x<num]
+            greater_ns = [x for x in word_nspam_exist_l if x>=num]
+            lesser_ns = [x for x in word_nspam_exist_l if x<num]
+            #Till here
+            word_exist = float(len(greater_s)+len(greater_ns))
+            word_spam_exist = float(len(greater_s))
+            word_nspam_exist = float(len(greater_ns))
+            word_nexist+= float(len(lesser_s)+len(lesser_ns))
+            word_spam_nexist+=float(len(lesser_s))
+            word_nspam_nexist+=float(len(lesser_ns))
+            if word_spam_exist == 0:
+                entp_val_spam = 0.0
+            else:
+                entp_val_spam = (word_exist / tot_len) * \
+                (-1 * (word_spam_exist / word_exist) * math.log(word_spam_exist / float(word_exist)))
 
-        if word_nspam_exist == 0:
-            entp_val_nspam = 0.0
-        else:
-            entp_val_nspam = (word_exist / tot_len) * \
-            (-1 * (word_nspam_exist / word_exist) * math.log(word_nspam_exist / float(word_exist)))
+            if word_nspam_exist == 0:
+                entp_val_nspam = 0.0
+            else:
+                entp_val_nspam = (word_exist / tot_len) * \
+                (-1 * (word_nspam_exist / word_exist) * math.log(word_nspam_exist / float(word_exist)))
 
-        if word_spam_nexist == 0:
-            entp_nval_spam = 0.0
-        else:
-            entp_nval_spam = (word_nexist / tot_len) * \
-            (-1 * (word_spam_nexist / word_nexist) * math.log(word_spam_nexist / float(word_nexist)))
+            if word_spam_nexist == 0:
+                entp_nval_spam = 0.0
+            else:
+                entp_nval_spam = (word_nexist / tot_len) * \
+                (-1 * (word_spam_nexist / word_nexist) * math.log(word_spam_nexist / float(word_nexist)))
 
-        if word_nspam_nexist == 0:
-            entp_nval_nspam = 0.0
-        else:
-            entp_nval_nspam = (word_nexist / tot_len) * \
-            (-1 * (word_nspam_nexist / word_nexist) * math.log(word_nspam_nexist / float(word_nexist)))
-        result =  (word, [1,((entp_val_spam + entp_val_nspam) * (entp_nval_spam + entp_nval_nspam))])
-        return result
+            if word_nspam_nexist == 0:
+                entp_nval_nspam = 0.0
+            else:
+                entp_nval_nspam = (word_nexist / tot_len) * \
+                (-1 * (word_nspam_nexist / word_nexist) * math.log(word_nspam_nexist / float(word_nexist)))
+            result.append([num,((entp_val_spam + entp_val_nspam) * (entp_nval_spam + entp_nval_nspam))])
+        result_value =  min(result, key=operator.itemgetter(1))
+        return (word,result_value)
             
-    def buildDecisionTree(self, DT):
+    def buildDecisionTree(self, DT,wordlist):
         entrList = {}
         if len(DT["spam"]) == 0:
             return "notspam"
         if len(DT["notspam"]) == 0:
             return "spam"
-        for word in self.words_list:
+        for word in wordlist:
             entrList[word] = self.calculateEntropy(word,DT)
         #print entrList
-        min_value = max(entrList.values(), key=operator.itemgetter(1))
-        #print min_value[0]
-        self.words_list.remove(min_value[0])
-        #print min_value
+        min_value = min(entrList.values(), key=operator.itemgetter(1))
+        wordlist.discard(min_value[0])
+        self.splitwords.add(min_value[0])
         left_tree = {"spam": [], "notspam": []}
         right_tree = {"spam": [], "notspam": []}
+        wordlist_l = set()
+        wordlist_r = set()
         for spam_mail in DT["spam"]:
             if min_value[0] in spam_mail:
+                wordlist_l.update(spam_mail.keys())
                 left_tree["spam"].append(spam_mail)
             else:
+                wordlist_r.update(spam_mail.keys())
                 right_tree["spam"].append(spam_mail)
         for non_spam_mail in DT["notspam"]:
             if min_value[0] in non_spam_mail:
+                wordlist_l.update(non_spam_mail.keys())
                 left_tree["notspam"].append(non_spam_mail)
             else:
+                wordlist_r.update(non_spam_mail.keys())
                 right_tree["notspam"].append(non_spam_mail)
-        lt = self.buildDecisionTree(left_tree)
-        rt = self.buildDecisionTree(right_tree)
+        wordlist_l.difference_update(self.splitwords)
+        wordlist_r.difference_update(self.splitwords)
+        lt = self.buildDecisionTree(left_tree,wordlist_l)
+        rt = self.buildDecisionTree(right_tree,wordlist_r)
         return DecisionTree((min_value[0],min_value[1][0]), lt, rt)
 
     def train(self, *args, **kwds):
@@ -129,7 +151,7 @@ class Model:
                 word_count = dict(Counter(words))
                 self.DeTr[spam_type].append(word_count)
                 #print self.DeTr
-                self.words_list.update(words)
+                self.wordslist_g.update(words)
 
         elif len(args) == 1:
             # May be we need this function to train spam/non-spam text as whole instead row wise
@@ -147,7 +169,7 @@ class Model:
                 self.likelihood_costs[prior][word] = math.log(1 / ((1.0 * count) / current_count))
 
     def build_dt(self):
-        return self.buildDecisionTree(self.DeTr)
+        return self.buildDecisionTree(self.DeTr,self.wordslist_g)
 
     def is_spam_or_not(self, words_list):
         tempTree = self.model_tree

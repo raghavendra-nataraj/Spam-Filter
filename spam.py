@@ -48,7 +48,9 @@ if mode == "train":
         model.train(text, "notspam")
     model.calculate_probabilities()
     if tech=="dt":
+        print "tree start"
         tree = model.build_dt()
+        print "Tree Over"
         model.save(model_path,tech,tree)
     else:
         model.save(model_path,tech)
@@ -57,6 +59,7 @@ if mode == "train":
 elif mode == "test":
     model = Model.Model()
     model.load(model_path, tech)
+    '''
     spam_ratios = []
     for text in spam_email_texts:
         spam_ratios.append(model.test(text))
@@ -74,10 +77,24 @@ elif mode == "test":
     print(true_negative)
     print(false_positive)
     print(false_negative)
-    
-    # for text in spam_email_texts:
-    #     print model.test(text)
-    # for text in non_spam_email_texts:
-    #     print model.test(text)
-    
-    
+    '''
+    true_positive= 0
+    true_negative=0
+    false_positive=0
+    false_negative=0
+    for text in spam_email_texts:
+        if model.test(text) == "spam":
+            true_positive+=1
+        else:
+            false_positive+=1
+    for text in non_spam_email_texts:
+        if model.test(text) == "notspam":
+            true_negative+=1
+        else:
+            false_negative+=1
+    print len(spam_email_texts)
+    print len(non_spam_email_texts)
+    print(true_positive)
+    print(true_negative)
+    print(false_positive)
+    print(false_negative)
