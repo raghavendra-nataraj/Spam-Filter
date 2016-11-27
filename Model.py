@@ -28,6 +28,20 @@ class Model:
     def __init__(self, model_type=None):
         self.model_type = model_type
 
+    def print_tree(self,tree,level,ret_lst):
+        ret_lst.append((str("-----"*level)+str(tree.root)))
+        if level==4:
+            return ""
+        if isinstance(tree.left, DecisionTree):
+            self.print_tree(tree.left,level+1,ret_lst)
+        else:
+            ret_lst.append((str("-----"*(level+1))+str(tree.left)))
+            
+        if isinstance(tree.right, DecisionTree):
+            self.print_tree(tree.right,level+1,ret_lst)
+        else:
+            ret_lst.append((str("-----"*(level+1))+str(tree.right)))
+        
     def __str__(self):
         ret_string = ""
         if self.model_type == "bayes":
@@ -37,9 +51,11 @@ class Model:
             ret_string += "Top 10 words associated with non spam (with strength of association):\n"
             ret_string += pprint.pformat(
                 str(sorted(self.likelihood_costs["notspam"].iteritems(), key=operator.itemgetter(1))[:10])) + "\n"
-            # if self.model_type == "dt":
-            #    print self.words_list
-        elif self.model_type == "dt":
+        if self.model_type == "dt":
+            ret_lst = []
+            self.print_tree(self.model_tree,0,ret_lst)
+            ret_string = "\n".join(ret_lst)
+        else:
             ret_string += "Yet to be implemented"
         return ret_string
 
