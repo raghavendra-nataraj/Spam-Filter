@@ -55,7 +55,7 @@ if mode == "train":
     else:
         model.save(model_path,tech)
 
-    print(model)
+    pprint.pprint(model)
 elif mode == "test":
     model = Model.Model()
     model.load(model_path, tech)

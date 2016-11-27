@@ -20,10 +20,13 @@ class Parser:
     prsr = None
     stops = None
     h = None
+
     def __init__(self):
         self.prsr = email.parser.Parser()
-        self.stops = set(stopwords.words('english'))
-        self.h=HTMLParser()
+        self.stops = set([word.encode("UTF-8") for word in stopwords.words('english')])
+
+        self.h = HTMLParser()
+
     def html_handler(self, html_string):
 
         soup = BeautifulSoup.BeautifulSoup(html_string)
@@ -36,27 +39,33 @@ class Parser:
         visible_texts = filter(visible, texts)
         string_texts = "".join([c.encode("UTF-8").lower() for c in visible_texts])
         word_list = re.sub("[ ]+", " ", string_texts)
-        return_words=[]
-        for word in re.split('\\|!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\.| |\n|>|<|\t|/|,',word_list):
+        word_list = re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', "",
+                           word_list)
+        return_words = []
+        for word in re.split('\\|\!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\'|\.| |\n|>|<|\t|/|,',
+                             word_list):
             if word not in self.stops:
- #               if re.match('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', word) is None:
-#                    if re.match('ftp[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',
- #                               word) is None:
+                #               re.match('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', word) is None:
+                #                    if re.match('ftp[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',
+                #                               word) is None:
                 stemmed_word = stem(word)
                 return_words.append(stemmed_word)
         return return_words
 
     def plain_handler(self, plain_text):
-        plain_text= re.sub("[ ]+", " ", plain_text)
-        return_words=[]
-        for word in re.split('\\|!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\.| |\n|>|<|\t|/|,', plain_text):
-            word=word.lower()
+        plain_text = re.sub("[ ]+", " ", plain_text)
+        return_words = []
+        plain_text = re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', "",
+                            plain_text)
+        for word in re.split('\\|\!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\'|\.| |\n|>|<|\t|/|,',
+                             plain_text):
+            word = word.lower()
             if word not in self.stops:
-                word=re.sub("[ ]+"," ",word)
-#                if re.match("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", word) is None:
+                word = re.sub("[ ]+", " ", word)
+                #                if re.match("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", word) is None:
                 stemmed_words = stem(word)
                 return_words.append(stemmed_words)
-        return  return_words
+        return return_words
 
     def parse(self, folder_path):
         current_files = [f for f in listdir(folder_path) if isfile(join(folder_path, f))]
@@ -88,7 +97,7 @@ class Parser:
             elif "plain" in ctype:
                 text = result.get_payload()
                 email_texts.append(self.plain_handler(text))
-                #email_texts.append(stemmed_words)
+                # email_texts.append(stemmed_words)
                 # else:
                 #    print ctype
         return email_texts
