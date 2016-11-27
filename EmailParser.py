@@ -6,7 +6,7 @@ from HTMLParser import HTMLParser
 from bs4 import BeautifulSoup
 from nltk.corpus import stopwords
 from stemming.porter2 import stem
-
+import string
 
 def visible(element):
     if element.parent.name in ['style', 'script', '[document]', 'head', 'title']:
@@ -20,13 +20,13 @@ class Parser:
     prsr = None
     stops = None
     h = None
-
+    printable = None
     def __init__(self):
         self.prsr = email.parser.Parser()
         self.stops = set([word.encode("UTF-8") for word in stopwords.words('english')])
 
         self.h = HTMLParser()
-
+        self.printable=set(string.printable)
     def html_handler(self, html_string):
 
         soup = BeautifulSoup(html_string)
@@ -36,11 +36,14 @@ class Parser:
         texts = soup.findAll(text=True)
         # get text
         # text = soup.get_text()
+
         visible_texts = filter(visible, texts)
         string_texts = "".join([c.encode("UTF-8").lower() for c in visible_texts])
         word_list = re.sub("[ ]+", " ", string_texts)
+
         word_list = re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', "",
                            word_list)
+        #word_list=filter(lambda x: x in self.printable, word_list)
         # word_list=self.h.unescape(word_list.encode("UTF-8"))
         return_words = []
         for word in re.split('\\|!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\'|\.| |\n|>|<|\t|/|\||,|\}|\{|`',

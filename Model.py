@@ -77,35 +77,31 @@ class Model:
 
     # Return the odds ratio of spam log likelihood probability v non spam log likelihood
     def test(self, words):
-        pprint.pprint(words)
         if self.model_type == "bayes":
             spam_total_counts = sum(self.likelihood_counts["spam"].itervalues()) + 0.1
             # spam_min_value = min(self.likelihood_counts["spam"].itervalues())
             spam_prior = self.prior_costs["spam"]
             spam_result = 0
             # for word in re.split(' |:|\.|,|\n', text):
-            pprint.pprint("For Spam")
-            pprint.pprint(self.priors["spam"])
             for word in words:
                 curr_cost = math.log(1 / (0.1 / spam_total_counts))
                 if word in self.likelihood_costs["spam"]:
                     curr_cost = self.likelihood_costs["spam"][word]
-                    pprint.pprint(word+":"+str(curr_cost))
+
                 spam_result += curr_cost
             spam_result += spam_prior
+
 
             not_spam_total_counts = sum(self.likelihood_counts["notspam"].itervalues()) + 0.1
             # spam_min_value = min(self.likelihood_counts["spam"].itervalues())
             not_spam_prior = self.prior_costs["notspam"]
             notspam_result = 0
             # for word in re.split(' |:|\.|,|\n', text):
-            pprint.pprint("Not spam")
-            pprint.pprint(self.priors["notspam"])
             for word in words:
                 curr_cost = math.log(1 / (0.1 / not_spam_total_counts))
                 if word in self.likelihood_costs["notspam"]:
                     curr_cost = self.likelihood_costs["notspam"][word]
-                    pprint.pprint(word + ":" + str(curr_cost))
+
                 notspam_result += curr_cost
             notspam_result += not_spam_prior
             return "spam" if spam_result - notspam_result < 0 else "notspam"
@@ -147,10 +143,10 @@ class Model:
                     if "LL" in next_row:
                         break
                     split_value = next_row.split(":")
-                    self.priors[split_value[0]] = float(split_value[1])
+                    self.prior_costs[split_value[0]] = float(split_value[1])
                 for likelihoods in content:
                     split_value = likelihoods.split(":")
-                    self.likelihood_counts[split_value[0]][split_value[1]] = float(split_value[2])
+                    self.likelihood_costs[split_value[0]][split_value[1]] = float(split_value[2])
             if technique == "dt":
                 if self.model_type is not None:
                     raise ModelNotEmptyException.ModelNotEmptyException

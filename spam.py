@@ -69,23 +69,26 @@ elif mode == "test":
     print(false_positive)
     print(false_negative)
     '''
+    print(model)
     true_positive = 0
     true_negative = 0
     false_positive = 0
     false_negative = 0
     for text in spam_email_texts:
-        if model.test(text) == "spam":
+        prediction = model.test(text)
+        if prediction == "spam":
             true_positive += 1
         else:
-            false_positive += 1
+            false_negative += 1
     for text in non_spam_email_texts:
-        if model.test(text) == "notspam":
+        prediction = model.test(text)
+        if prediction == "notspam":
             true_negative += 1
         else:
-            false_negative += 1
+            false_positive += 1
     print len(spam_email_texts)
     print len(non_spam_email_texts)
-    print(true_positive)
-    print(true_negative)
-    print(false_positive)
-    print(false_negative)
+    print("True Positive"+true_positive)
+    print("True Negative"+true_negative)
+    print("False Positive"+false_positive)
+    print("False Negative"+false_negative)
