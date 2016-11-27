@@ -88,7 +88,7 @@ elif mode == "test":
             false_positive += 1
     print len(spam_email_texts)
     print len(non_spam_email_texts)
-    print("True Positive"+true_positive)
-    print("True Negative"+true_negative)
-    print("False Positive"+false_positive)
-    print("False Negative"+false_negative)
+    print("True Positive"+str(true_positive))
+    print("True Negative"+str(true_negative))
+    print("False Positive"+str(false_positive))
+    print("False Negative"+str(false_negative))
