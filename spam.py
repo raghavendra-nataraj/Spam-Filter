@@ -40,22 +40,13 @@ p = EmailParser.Parser()
 spam_email_texts = p.parse(directory + "/spam/")
 
 non_spam_email_texts = p.parse(directory + "/notspam/")
+train_rows = [(spam_email_texts, "spam"), (non_spam_email_texts, "notspam")]
 if mode == "train":
     model = Model.Model(tech)
-    for text in spam_email_texts:
-        model.train(text, "spam")
-    for text in non_spam_email_texts:
-        model.train(text, "notspam")
-    model.calculate_probabilities()
-    if tech=="dt":
-        print "tree start"
-        tree = model.build_dt()
-        print "Tree Over"
-        model.save(model_path,tech,tree)
-    else:
-        model.save(model_path,tech)
+    model.train(spam_email_texts, non_spam_email_texts)
+    model.save(model_path, tech)
+    print(model)
 
-    pprint.pprint(model)
 elif mode == "test":
     model = Model.Model()
     model.load(model_path, tech)
@@ -78,20 +69,20 @@ elif mode == "test":
     print(false_positive)
     print(false_negative)
     '''
-    true_positive= 0
-    true_negative=0
-    false_positive=0
-    false_negative=0
+    true_positive = 0
+    true_negative = 0
+    false_positive = 0
+    false_negative = 0
     for text in spam_email_texts:
         if model.test(text) == "spam":
-            true_positive+=1
+            true_positive += 1
         else:
-            false_positive+=1
+            false_positive += 1
     for text in non_spam_email_texts:
         if model.test(text) == "notspam":
-            true_negative+=1
+            true_negative += 1
         else:
-            false_negative+=1
+            false_negative += 1
     print len(spam_email_texts)
     print len(non_spam_email_texts)
     print(true_positive)

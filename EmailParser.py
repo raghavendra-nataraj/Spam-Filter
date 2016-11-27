@@ -3,7 +3,7 @@ import re
 from os import listdir
 from os.path import isfile, join
 from HTMLParser import HTMLParser
-import BeautifulSoup
+from bs4 import BeautifulSoup
 from nltk.corpus import stopwords
 from stemming.porter2 import stem
 
@@ -11,7 +11,7 @@ from stemming.porter2 import stem
 def visible(element):
     if element.parent.name in ['style', 'script', '[document]', 'head', 'title']:
         return False
-    elif re.match('<!--.*-->', str(element)):
+    elif re.match('<!--.*-->', str(element.encode("UTF-8"))):
         return False
     return True
 
@@ -29,7 +29,7 @@ class Parser:
 
     def html_handler(self, html_string):
 
-        soup = BeautifulSoup.BeautifulSoup(html_string)
+        soup = BeautifulSoup(html_string)
         # kill all script and style elements
         # for script in soup(["script", "style"]):
         #    script.extract()  # rip it out
@@ -41,15 +41,15 @@ class Parser:
         word_list = re.sub("[ ]+", " ", string_texts)
         word_list = re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', "",
                            word_list)
+        # word_list=self.h.unescape(word_list.encode("UTF-8"))
         return_words = []
-        for word in re.split('\\|\!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\'|\.| |\n|>|<|\t|/|,',
+        for word in re.split('\\|!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\'|\.| |\n|>|<|\t|/|\||,|\}|\{|`',
                              word_list):
             if word not in self.stops:
-                #               re.match('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', word) is None:
-                #                    if re.match('ftp[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',
-                #                               word) is None:
+                word = re.sub("[ ]+", " ", word)
                 stemmed_word = stem(word)
-                return_words.append(stemmed_word)
+                if len(word) > 0:
+                    return_words.append(stemmed_word)
         return return_words
 
     def plain_handler(self, plain_text):
@@ -57,14 +57,14 @@ class Parser:
         return_words = []
         plain_text = re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', "",
                             plain_text)
-        for word in re.split('\\|\!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\'|\.| |\n|>|<|\t|/|,',
+        for word in re.split('\\|!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\'|\.| |\n|>|<|\t|/|,|\||\}|\{|`',
                              plain_text):
             word = word.lower()
             if word not in self.stops:
                 word = re.sub("[ ]+", " ", word)
-                #                if re.match("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", word) is None:
                 stemmed_words = stem(word)
-                return_words.append(stemmed_words)
+                if len(word) > 0:
+                    return_words.append(stemmed_words)
         return return_words
 
     def parse(self, folder_path):
