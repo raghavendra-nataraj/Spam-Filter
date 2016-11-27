@@ -37,16 +37,26 @@ class Parser:
         string_texts = "".join([c.encode("UTF-8").lower() for c in visible_texts])
         word_list = re.sub("[ ]+", " ", string_texts)
         return_words=[]
-        for word in word_list.split():
+        for word in re.split('\\|!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\.| |\n|>|<|\t|/|,',word_list):
             if word not in self.stops:
-                if re.match('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', word) is None:
-                    try:
-                        stemmed_word = stem(word)
-                    except :
-                        print(stemmed_word)
-                        exit(1)
-                    return_words.append(stemmed_word)
+ #               if re.match('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', word) is None:
+#                    if re.match('ftp[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+',
+ #                               word) is None:
+                stemmed_word = stem(word)
+                return_words.append(stemmed_word)
         return return_words
+
+    def plain_handler(self, plain_text):
+        plain_text= re.sub("[ ]+", " ", plain_text)
+        return_words=[]
+        for word in re.split('\\|!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\.| |\n|>|<|\t|/|,', plain_text):
+            word=word.lower()
+            if word not in self.stops:
+                word=re.sub("[ ]+"," ",word)
+#                if re.match("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", word) is None:
+                stemmed_words = stem(word)
+                return_words.append(stemmed_words)
+        return  return_words
 
     def parse(self, folder_path):
         current_files = [f for f in listdir(folder_path) if isfile(join(folder_path, f))]
@@ -68,18 +78,17 @@ class Parser:
                             email_texts.append(self.html_handler(current_message))
                         elif "plain" in ctype:
                             text = parts.get_payload()
-                            filtered_words = [word for word in text.split() if word not in self.stops]
-                            stemmed_words = [stem(word) for word in filtered_words]
-                            email_texts.append(stemmed_words)
+                            email_texts.append(self.plain_handler(text))
+                            # filtered_words = [word.lower() for word in text.split() if word not in self.stops]
+                            # stemmed_words = [stem(word) for word in filtered_words]
+                            # email_texts.append(stemmed_words)
             elif "html" in ctype:
                 current_message = result.get_payload()
                 email_texts.append(self.html_handler(current_message))
             elif "plain" in ctype:
                 text = result.get_payload()
-                filtered_words = [word for word in text.split() if word not in self.stops]
-                stemmed_words = [stem(word) for word in filtered_words if re.match(
-                    "http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+", word ) is None]
-                email_texts.append(stemmed_words)
+                email_texts.append(self.plain_handler(text))
+                #email_texts.append(stemmed_words)
                 # else:
                 #    print ctype
         return email_texts

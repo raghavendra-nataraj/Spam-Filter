@@ -108,10 +108,10 @@ class Model:
             # words = re.split(' |:|\.|,|\n', text)
             size = len(words)
             for word in words:
-                if word.lower() in self.likelihood_counts[spam_type]:
-                    self.likelihood_counts[spam_type][word.lower()] += 1
+                if word in self.likelihood_counts[spam_type]:
+                    self.likelihood_counts[spam_type][word] += 1
                 else:
-                    self.likelihood_counts[spam_type][word.lower()] = 1
+                    self.likelihood_counts[spam_type][word] = 1
             if self.model_type == "dt":
                 # Do additional work here to create thresholds etc for decision tree model
                 text = args[0]
@@ -158,8 +158,8 @@ class Model:
             # for word in re.split(' |:|\.|,|\n', text):
             for word in words:
                 curr_cost = math.log(1 / (0.1 / spam_total_counts))
-                if word.lower() in self.likelihood_costs["spam"]:
-                    curr_cost = self.likelihood_costs["spam"][word.lower()]
+                if word in self.likelihood_costs["spam"]:
+                    curr_cost = self.likelihood_costs["spam"][word]
                 spam_result += curr_cost
             spam_result += spam_prior
 
@@ -170,8 +170,8 @@ class Model:
             # for word in re.split(' |:|\.|,|\n', text):
             for word in words:
                 curr_cost = math.log(1 / (0.1 / not_spam_total_counts))
-                if word.lower() in self.likelihood_costs["notspam"]:
-                    curr_cost = self.likelihood_costs["notspam"][word.lower()]
+                if word in self.likelihood_costs["notspam"]:
+                    curr_cost = self.likelihood_costs["notspam"][word]
                 notspam_result += curr_cost
             notspam_result += not_spam_prior
             return spam_result - notspam_result
