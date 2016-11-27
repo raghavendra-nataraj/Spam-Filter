@@ -38,6 +38,7 @@ else:
 
 p = EmailParser.Parser()
 spam_email_texts = p.parse(directory + "/spam/")
+
 non_spam_email_texts = p.parse(directory + "/notspam/")
 if mode == "train":
     model = Model.Model(tech)

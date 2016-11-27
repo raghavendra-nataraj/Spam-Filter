@@ -1,10 +1,11 @@
 import math
-import pprint
-import ModelNotEmptyException, IncorrectModelFileException
 import operator
 import pickle
 import re
 import sys
+
+import IncorrectModelFileException
+import ModelNotEmptyException
 from DecisionTree import DecisionTree
 
 sys.setrecursionlimit(9999)
@@ -101,11 +102,11 @@ class Model:
 
     def train(self, *args, **kwds):
         if len(args) == 2:
-            text = args[0]
+            words = args[0]
             spam_type = args[1]
             self.priors[spam_type] += 1
-            words = re.split(' |:|\.|,|\n', text)
-            size=len(words)
+            # words = re.split(' |:|\.|,|\n', text)
+            size = len(words)
             for word in words:
                 if word.lower() in self.likelihood_counts[spam_type]:
                     self.likelihood_counts[spam_type][word.lower()] += 1
@@ -148,15 +149,15 @@ class Model:
         return tempTree
 
     # Return the odds ratio of spam log likelihood probability v non spam log likelihood
-    def test(self, text):
+    def test(self, words):
         if self.model_type == "bayes":
             spam_total_counts = sum(self.likelihood_counts["spam"].itervalues()) + 0.1
             # spam_min_value = min(self.likelihood_counts["spam"].itervalues())
             spam_prior = self.prior_costs["spam"]
             spam_result = 0
-            #for word in re.split(' |:|\.|,|\n', text):
-            for word in text.split():
-                curr_cost = math.log(1 / ( 0.1/ spam_total_counts))
+            # for word in re.split(' |:|\.|,|\n', text):
+            for word in words:
+                curr_cost = math.log(1 / (0.1 / spam_total_counts))
                 if word.lower() in self.likelihood_costs["spam"]:
                     curr_cost = self.likelihood_costs["spam"][word.lower()]
                 spam_result += curr_cost
@@ -166,17 +167,17 @@ class Model:
             # spam_min_value = min(self.likelihood_counts["spam"].itervalues())
             not_spam_prior = self.prior_costs["notspam"]
             notspam_result = 0
-            #for word in re.split(' |:|\.|,|\n', text):
-            for word in text.split():
-                curr_cost = math.log(1 / ( 0.1 / not_spam_total_counts))
+            # for word in re.split(' |:|\.|,|\n', text):
+            for word in words:
+                curr_cost = math.log(1 / (0.1 / not_spam_total_counts))
                 if word.lower() in self.likelihood_costs["notspam"]:
                     curr_cost = self.likelihood_costs["notspam"][word.lower()]
                 notspam_result += curr_cost
-            notspam_result +=not_spam_prior
+            notspam_result += not_spam_prior
             return spam_result - notspam_result
         else:
-            words_in_mail = re.split(' |:|\.|,|\n', text)
-            result = self.is_spam_or_not(words_in_mail)
+            # words_in_mail = re.split(' |:|\.|,|\n', text)
+            result = self.is_spam_or_not(words)
             return result
 
     def save(self, file_path, tech, tree=None):
