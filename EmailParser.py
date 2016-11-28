@@ -51,7 +51,7 @@ class Parser:
             if word not in self.stops:
                 word = re.sub("[ ]+", " ", word)
                 stemmed_word = stem(word)
-                if len(word) > 0:
+                if len(word) > 0  and len(word)<15 and not word.isdigit():
                     return_words.append(stemmed_word)
         return return_words
 
@@ -66,7 +66,7 @@ class Parser:
             if word not in self.stops:
                 word = re.sub("[ ]+", " ", word)
                 stemmed_words = stem(word)
-                if len(word) > 0:
+                if len(word) > 0 and len(word)<15 and not word.isdigit():
                     return_words.append(stemmed_words)
         return return_words
 
