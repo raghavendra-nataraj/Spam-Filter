@@ -9,7 +9,7 @@ import ModelNotEmptyException
 from DecisionTree import DecisionTree
 from collections import Counter
 
-sys.setrecursionlimit(99999)
+
 
 
 class Model:
@@ -196,7 +196,7 @@ class Model:
                 word_nexist += 1
                 word_nspam_nexist += 1
         # possible issues
-        binary = False
+        binary = True
         if binary:
             word_iterList = [1]
         else:
@@ -229,16 +229,14 @@ class Model:
                 entp_nval_spam = 0.0
             else:
                 entp_nval_spam = (word_nexist / tot_len) * \
-                                 (-1 * (word_spam_nexist / word_nexist) * math.log(
-                                     word_spam_nexist / float(word_nexist)))
+                                 (-1 * (word_spam_nexist / word_nexist) * math.log(word_spam_nexist / float(word_nexist)))
 
             if word_nspam_nexist == 0:
                 entp_nval_nspam = 0.0
             else:
                 entp_nval_nspam = (word_nexist / tot_len) * \
-                                  (-1 * (word_nspam_nexist / word_nexist) * math.log(
-                                      word_nspam_nexist / float(word_nexist)))
-            result.append([num, ((entp_val_spam + entp_val_nspam) * (entp_nval_spam + entp_nval_nspam))])
+                                  (-1 * (word_nspam_nexist / word_nexist) * math.log(word_nspam_nexist / float(word_nexist)))
+            result.append([num, ((entp_val_spam + entp_val_nspam) + (entp_nval_spam + entp_nval_nspam))])
         result_value = min(result, key=operator.itemgetter(1))
         return (word, result_value)
 
