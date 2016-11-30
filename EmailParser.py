@@ -8,6 +8,7 @@ from nltk.corpus import stopwords
 from stemming.porter2 import stem
 import string
 
+
 def visible(element):
     if element.parent.name in ['style', 'script', '[document]', 'head', 'title']:
         return False
@@ -21,12 +22,14 @@ class Parser:
     stops = None
     h = None
     printable = None
+
     def __init__(self):
         self.prsr = email.parser.Parser()
         self.stops = set([word.encode("UTF-8") for word in stopwords.words('english')])
 
         self.h = HTMLParser()
-        self.printable=set(string.printable)
+        self.printable = set(string.printable)
+
     def html_handler(self, html_string):
 
         soup = BeautifulSoup(html_string)
@@ -49,15 +52,15 @@ class Parser:
         # drop blank lines
         text = '\n'.join(chunk for chunk in chunks if chunk)
 
-        #visible_texts = filter(visible, texts)
+        # visible_texts = filter(visible, texts)
         string_texts = "".join([c.encode("UTF-8").lower() for c in text])
-        #print ("====")
-        #print(string_texts )
+        # print ("====")
+        # print(string_texts )
         word_list = re.sub("[ ]+", " ", string_texts)
 
         word_list = re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', "",
                            word_list)
-        #word_list=filter(lambda x: x in self.printable, word_list)
+        # word_list=filter(lambda x: x in self.printable, word_list)
         # word_list=self.h.unescape(word_list.encode("UTF-8"))
         return_words = []
         word_list = ''.join([x for x in word_list if x in string.printable])
@@ -67,7 +70,7 @@ class Parser:
             if word not in self.stops:
                 word = re.sub("[ ]+", " ", word)
                 stemmed_word = stem(word)
-                if len(word) > 0  and len(word)<15 and not word.isdigit():
+                if len(word) > 0 and len(word) < 15 and not word.isdigit():
                     return_words.append(stemmed_word)
         return return_words
 
@@ -76,14 +79,14 @@ class Parser:
         return_words = []
         plain_text = re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', "",
                             plain_text)
-        #print(plain_text)
+        # print(plain_text)
         for word in re.split('\\|!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\'|\.| |\n|>|<|\t|/|,|\||\}|\{|`',
                              plain_text):
             word = word.lower()
             if word not in self.stops:
                 word = re.sub("[ ]+", " ", word)
                 stemmed_words = stem(word)
-                if len(word) > 0 and len(word)<15 and not word.isdigit():
+                if len(word) > 0 and len(word) < 15 and not word.isdigit():
                     return_words.append(stemmed_words)
         return return_words
 
@@ -94,7 +97,7 @@ class Parser:
 
         for email_file in current_files:
             with open(folder_path + email_file, 'r') as fp:
-                results.append((self.prsr.parse(fp),email_file))
+                results.append((self.prsr.parse(fp), email_file))
         while len(results) > 0:
             result, file = results.pop()
             ctype = result.get_content_type()
