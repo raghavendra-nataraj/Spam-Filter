@@ -10,8 +10,6 @@ from DecisionTree import DecisionTree
 from collections import Counter
 
 
-
-
 class Model:
     model_type = None
     priors = {"spam": 0, "notspam": 0}
@@ -19,7 +17,8 @@ class Model:
     likelihood_counts = {"spam": {}, "notspam": {}}
     likelihood_costs = {"spam": {}, "notspam": {}}
     minimum_ll = {"spam": 0.0000000001, "notspam": 0.0000000001}
-
+    spam_total_counts = 0.1
+    notspam_total_counts = 0.1
     model_tree = None
     DeTr = {"spam": [], "notspam": []}
     wordslist_g = set()
@@ -28,20 +27,20 @@ class Model:
     def __init__(self, model_type=None):
         self.model_type = model_type
 
-    def print_tree(self,tree,level,ret_lst):
-        ret_lst.append((str("-----"*level)+str(tree.root)))
-        if level==4:
+    def print_tree(self, tree, level, ret_lst):
+        ret_lst.append((str("-----" * level) + str(tree.root)))
+        if level == 4:
             return ""
         if isinstance(tree.left, DecisionTree):
-            self.print_tree(tree.left,level+1,ret_lst)
+            self.print_tree(tree.left, level + 1, ret_lst)
         else:
-            ret_lst.append((str("-----"*(level+1))+str(tree.left)))
-            
+            ret_lst.append((str("-----" * (level + 1)) + str(tree.left)))
+
         if isinstance(tree.right, DecisionTree):
-            self.print_tree(tree.right,level+1,ret_lst)
+            self.print_tree(tree.right, level + 1, ret_lst)
         else:
-            ret_lst.append((str("-----"*(level+1))+str(tree.right)))
-        
+            ret_lst.append((str("-----" * (level + 1)) + str(tree.right)))
+
     def __str__(self):
         ret_string = ""
         if self.model_type == "bayes":
@@ -51,9 +50,9 @@ class Model:
             ret_string += "Top 10 words associated with non spam (with strength of association):\n"
             ret_string += pprint.pformat(
                 str(sorted(self.likelihood_costs["notspam"].iteritems(), key=operator.itemgetter(1))[:10])) + "\n"
-        if self.model_type == "dt":
+        elif self.model_type == "dt":
             ret_lst = []
-            self.print_tree(self.model_tree,0,ret_lst)
+            self.print_tree(self.model_tree, 0, ret_lst)
             ret_string = "\n".join(ret_lst)
         else:
             ret_string += "Yet to be implemented"
@@ -94,21 +93,20 @@ class Model:
     # Return the odds ratio of spam log likelihood probability v non spam log likelihood
     def test(self, words):
         if self.model_type == "bayes":
-            spam_total_counts = sum(self.likelihood_counts["spam"].itervalues()) + 0.1
+
             # spam_min_value = min(self.likelihood_counts["spam"].itervalues())
             spam_prior = self.prior_costs["spam"]
             spam_result = 0
             # for word in re.split(' |:|\.|,|\n', text):
             for word in words:
-                curr_cost = math.log(1 / (0.1 / spam_total_counts))
+                curr_cost = math.log(1 / (0.1 / self.spam_total_counts))
                 if word in self.likelihood_costs["spam"]:
                     curr_cost = self.likelihood_costs["spam"][word]
 
                 spam_result += curr_cost
             spam_result += spam_prior
 
-
-            not_spam_total_counts = sum(self.likelihood_counts["notspam"].itervalues()) + 0.1
+            not_spam_total_counts = self.notspam_total_counts
             # spam_min_value = min(self.likelihood_counts["spam"].itervalues())
             not_spam_prior = self.prior_costs["notspam"]
             notspam_result = 0
@@ -133,6 +131,9 @@ class Model:
                 fp.write("Priors:" + str(len(self.prior_costs)) + "\n")
                 for prior, count in self.prior_costs.iteritems():
                     fp.write(prior + ":" + str(count) + "\n")
+                fp.write("LL Counts:" + str(len(self.prior_costs)) + "\n")
+                fp.write("Spam" + ":" + str(self.spam_total_counts) + "\n")
+                fp.write("NotSpam" + ":" + str(self.notspam_total_counts) + "\n")
                 fp.write(
                     "LL:" + str(len(self.likelihood_costs["spam"]) + len(self.likelihood_costs["notspam"])) + "\n")
                 for prior, word_counts in self.likelihood_costs.iteritems():
@@ -154,15 +155,29 @@ class Model:
                 if technique != model_row.split(":")[1]:
                     raise IncorrectModelFileException
                 self.model_type = model_row.split(":")[1]
+                next_loop_count = 0
                 while True:
                     next_row = content.pop(0)
                     if "LL" in next_row:
+                        count_split = next_row.split(":")
+                        next_loop_count = count_split[1]
                         break
                     split_value = next_row.split(":")
                     self.prior_costs[split_value[0]] = float(split_value[1])
+                spam_count_row = content.pop(0)
+                notspam_count_row = content.pop(0)
+                self.spam_total_counts = float(spam_count_row.split(":")[1])
+                self.notspam_total_counts = float(notspam_count_row.split(":")[1])
+                content.pop(0)
                 for likelihoods in content:
                     split_value = likelihoods.split(":")
-                    self.likelihood_costs[split_value[0]][split_value[1]] = float(split_value[2])
+                    word = split_value[1]
+                    for index in range(2, len(split_value) - 1):
+                        word += ":" + split_value[index]
+                    cost = split_value[len(split_value) - 1]
+                    if split_value[0] not in self.likelihood_costs:
+                        self.likelihood_costs[split_value[0]] = {}
+                    self.likelihood_costs[split_value[0]][word] = float(cost)
             if technique == "dt":
                 if self.model_type is not None:
                     raise ModelNotEmptyException.ModelNotEmptyException
@@ -170,6 +185,8 @@ class Model:
                     with open(file_path, "r") as fp:
                         self.model_tree = pickle.loads(fp.read())
                         # print self.model_tree.left
+
+
                         fp.close()
 
     def calculateEntropy(self, word, DT):
@@ -229,13 +246,15 @@ class Model:
                 entp_nval_spam = 0.0
             else:
                 entp_nval_spam = (word_nexist / tot_len) * \
-                                 (-1 * (word_spam_nexist / word_nexist) * math.log(word_spam_nexist / float(word_nexist)))
+                                 (-1 * (word_spam_nexist / word_nexist) * math.log(
+                                     word_spam_nexist / float(word_nexist)))
 
             if word_nspam_nexist == 0:
                 entp_nval_nspam = 0.0
             else:
                 entp_nval_nspam = (word_nexist / tot_len) * \
-                                  (-1 * (word_nspam_nexist / word_nexist) * math.log(word_nspam_nexist / float(word_nexist)))
+                                  (-1 * (word_nspam_nexist / word_nexist) * math.log(
+                                      word_nspam_nexist / float(word_nexist)))
             result.append([num, ((entp_val_spam + entp_val_nspam) + (entp_nval_spam + entp_nval_nspam))])
         result_value = min(result, key=operator.itemgetter(1))
         return (word, result_value)
@@ -289,6 +308,8 @@ class Model:
         return tempTree
 
     def calculate_probabilities(self):
+        self.spam_total_counts = sum(self.likelihood_counts["spam"].itervalues()) + 0.1
+        self.notspam_total_counts = sum(self.likelihood_counts["notspam"].itervalues()) + 0.1
         total_counts = sum(self.priors.itervalues())
         for prior, count in self.priors.iteritems():
             self.prior_costs[prior] = math.log(1 / ((1.0 * count) / total_counts))
