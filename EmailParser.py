@@ -33,12 +33,26 @@ class Parser:
         # kill all script and style elements
         # for script in soup(["script", "style"]):
         #    script.extract()  # rip it out
-        texts = soup.findAll(text=True)
+        # texts = soup.findAll(text=True)
         # get text
         # text = soup.get_text()
+        for script in soup(["script", "style"]):
+            script.extract()  # rip it out
 
-        visible_texts = filter(visible, texts)
-        string_texts = "".join([c.encode("UTF-8").lower() for c in visible_texts])
+        # get text
+        text = soup.get_text()
+
+        # break into lines and remove leading and trailing space on each
+        lines = (line.strip() for line in text.splitlines())
+        # break multi-headlines into a line each
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        # drop blank lines
+        text = '\n'.join(chunk for chunk in chunks if chunk)
+
+        #visible_texts = filter(visible, texts)
+        string_texts = "".join([c.encode("UTF-8").lower() for c in text])
+        #print ("====")
+        #print(string_texts )
         word_list = re.sub("[ ]+", " ", string_texts)
 
         word_list = re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', "",
@@ -46,6 +60,8 @@ class Parser:
         #word_list=filter(lambda x: x in self.printable, word_list)
         # word_list=self.h.unescape(word_list.encode("UTF-8"))
         return_words = []
+        word_list = ''.join([x for x in word_list if x in string.printable])
+
         for word in re.split('\\|!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\'|\.| |\n|>|<|\t|/|\||,|\}|\{|`',
                              word_list):
             if word not in self.stops:
@@ -60,6 +76,7 @@ class Parser:
         return_words = []
         plain_text = re.sub('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', "",
                             plain_text)
+        #print(plain_text)
         for word in re.split('\\|!|@|#|\$|%|\^|&|\*|\)|\[|\]|\(|_|\+|=|-|~|;|:|\?|\"|\'|\.| |\n|>|<|\t|/|,|\||\}|\{|`',
                              plain_text):
             word = word.lower()
@@ -77,15 +94,16 @@ class Parser:
 
         for email_file in current_files:
             with open(folder_path + email_file, 'r') as fp:
-                results.append(self.prsr.parse(fp))
+                results.append((self.prsr.parse(fp),email_file))
         while len(results) > 0:
-            result = results.pop()
+            result, file = results.pop()
             ctype = result.get_content_type()
             current_message = ""
             if result.is_multipart():
                 for parts in result.walk():
                     if not parts.is_multipart():
                         if "html" in parts.get_content_type():
+                            # print("==================================" + file + "==================================")
                             current_message = parts.get_payload()
                             email_texts.append(self.html_handler(current_message))
                         elif "plain" in ctype:
@@ -95,6 +113,7 @@ class Parser:
                             # stemmed_words = [stem(word) for word in filtered_words]
                             # email_texts.append(stemmed_words)
             elif "html" in ctype:
+                # print("=================================="+file+"==================================")
                 current_message = result.get_payload()
                 email_texts.append(self.html_handler(current_message))
             elif "plain" in ctype:

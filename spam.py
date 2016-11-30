@@ -2,13 +2,11 @@ import sys
 import os
 import Model
 import EmailParser
-import pprint
-from os import listdir
-from os.path import isfile, join
+
 
 MODES = {"train", "test"}
 TECHNIQUES = {"bayes", "dt"}
-print(sys.argv)
+
 try:
     mode = sys.argv[1]
     tech = sys.argv[2]
@@ -38,9 +36,9 @@ else:
 
 p = EmailParser.Parser()
 spam_email_texts = p.parse(directory + "/spam/")
-
 non_spam_email_texts = p.parse(directory + "/notspam/")
-train_rows = [(spam_email_texts, "spam"), (non_spam_email_texts, "notspam")]
+
+# sys.exit(0)
 if mode == "train":
     model = Model.Model(tech)
     model.train(spam_email_texts, non_spam_email_texts)
@@ -50,25 +48,6 @@ if mode == "train":
 elif mode == "test":
     model = Model.Model()
     model.load(model_path, tech)
-    '''
-    spam_ratios = []
-    for text in spam_email_texts:
-        spam_ratios.append(model.test(text))
-    pprint.pprint(spam_ratios)
-    true_positive = (1.0 * sum(i < 0 for i in spam_ratios))
-    false_negative = len(spam_ratios) - true_positive
-    non_spam_ratios = []
-    for text in non_spam_email_texts:
-        non_spam_ratios.append(model.test(text))
-    pprint.pprint(non_spam_ratios)
-    false_positive = (1.0 * sum(i < 0 for i in non_spam_ratios))
-    true_negative = len(non_spam_ratios) - false_positive
-    #print(model)
-    print(true_positive)
-    print(true_negative)
-    print(false_positive)
-    print(false_negative)
-    '''
     print(model)
     true_positive = 0
     true_negative = 0
