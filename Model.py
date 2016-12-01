@@ -277,7 +277,7 @@ class Model:
         wordlist_r = set()
         for spam_mail in DT["spam"]:
             if len(spam_mail)>0:
-                if min_value[0] in spam_mail:
+                if min_value[0] in spam_mail and spam_mail[min_value[0]] >= min_value[1][0]:
                     wordlist_l.update(spam_mail.keys())
                     left_tree["spam"].append(spam_mail)
                 else:
@@ -285,7 +285,7 @@ class Model:
                     right_tree["spam"].append(spam_mail)
         for non_spam_mail in DT["notspam"]:
             if len(non_spam_mail)>0:
-                if min_value[0] in non_spam_mail:
+                if min_value[0] in non_spam_mail and non_spam_mail[min_value[0]] >= min_value[1][0]:
                     wordlist_l.update(non_spam_mail.keys())
                     left_tree["notspam"].append(non_spam_mail)
                 else:
