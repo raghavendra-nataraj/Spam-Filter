@@ -213,7 +213,7 @@ class Model:
                 word_nexist += 1
                 word_nspam_nexist += 1
         # possible issues
-        binary = True
+        binary = False
         if binary:
             word_iterList = [1]
         else:
@@ -276,19 +276,21 @@ class Model:
         wordlist_l = set()
         wordlist_r = set()
         for spam_mail in DT["spam"]:
-            if min_value[0] in spam_mail:
-                wordlist_l.update(spam_mail.keys())
-                left_tree["spam"].append(spam_mail)
-            else:
-                wordlist_r.update(spam_mail.keys())
-                right_tree["spam"].append(spam_mail)
+            if len(spam_mail)>0:
+                if min_value[0] in spam_mail:
+                    wordlist_l.update(spam_mail.keys())
+                    left_tree["spam"].append(spam_mail)
+                else:
+                    wordlist_r.update(spam_mail.keys())
+                    right_tree["spam"].append(spam_mail)
         for non_spam_mail in DT["notspam"]:
-            if min_value[0] in non_spam_mail:
-                wordlist_l.update(non_spam_mail.keys())
-                left_tree["notspam"].append(non_spam_mail)
-            else:
-                wordlist_r.update(non_spam_mail.keys())
-                right_tree["notspam"].append(non_spam_mail)
+            if len(non_spam_mail)>0:
+                if min_value[0] in non_spam_mail:
+                    wordlist_l.update(non_spam_mail.keys())
+                    left_tree["notspam"].append(non_spam_mail)
+                else:
+                    wordlist_r.update(non_spam_mail.keys())
+                    right_tree["notspam"].append(non_spam_mail)
         wordlist_l.difference_update(self.splitwords)
         wordlist_r.difference_update(self.splitwords)
         lt = self.buildDecisionTree(left_tree, wordlist_l)
