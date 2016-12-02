@@ -1,8 +1,46 @@
+#!/usr/bin/env python
+
+'''
+Naive Bayes
+Formulation: We formulate the dependence of mail type(spam/not spam) on the words using Naive Bayes Assumption.
+            The assumption here is given the type of email the words are independant of each other
+
+            P( S=1/W1,W2,...,Wn) is proportional to P( W1,W2,...,Wn/S=1) P(S=1)
+            By Naive Bayes assumption,
+            P( S=1/W1,W2,...,Wn) is proportional to P( W1/S=1) P( W2/S=1) P( W3/S=1) ...P( Wn/S=1)P( S=1)
+
+            In the above equation we learn each of the terms using the training dataset provided
+
+Program Working: The part of code which parses the email is common between train and test mode.
+                 We initialize the model (Model class with model parameters) based on the technique selected
+                 Based on the mode, we call either
+                    train - which will simply count the prior occurences and liklihood occurences
+                            After all emails training sets are processed we convert these counts to costs
+                            These costs are saved to model file
+                    test - During testing phase we load the costs from file to the model class variables
+                         - Each document we calculate the negative log of posterior (in above formulation)
+                         - Each document is classified as that class which has minimum negative log lilkihood
+                         - We compare our predictions with ground truth and calculate the confusion matrix
+Output:
+    For Count based features:
+        True Positive:1184
+        True Negative:1382
+        False Positive:16
+        False Negative:104
+
+    For Binary features:
+        True Positive:1184
+        True Negative:1382
+        False Positive:16
+        False Negative:104
+'''
+
+
 import sys
 import os
 import Model
 import EmailParser
-import pprint
+
 
 MODES = {"train", "test"}
 TECHNIQUES = {"bayes", "dt"}
