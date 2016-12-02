@@ -54,8 +54,6 @@ class Model:
             ret_lst = []
             self.print_tree(self.model_tree, 0, ret_lst)
             ret_string = "\n".join(ret_lst)
-        else:
-            ret_string += "Yet to be implemented"
         return ret_string
 
     def train(self, spam_list, non_spam_list):
