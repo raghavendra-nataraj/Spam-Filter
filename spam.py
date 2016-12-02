@@ -34,6 +34,34 @@ Output:
         False Positive:16
         False Negative:104
 
+Decision Tree:
+
+
+	1)Formulation
+		->We considered each word in a mail as an attribute and each row as a mail.
+		->In the decision tree each node has root element as word and number of occurance(1 in case of binary).It has left and right which point to another decision tree node 			or leaf "spam" or "notsapm"
+	2)Working
+		->We iterate over each mail and extract the words and return a list of words for each mail. We construct a dictionary with two keys(spam and notspam). Each item in dictionary is a list of mail. Each list will hold word and number of time it occurs. We follow the below step in recursion.
+			a)We create set of words in both spam and notspam list.
+			b)calculate the entropy for each attribute(based on whether continous or binary)
+			c) split the list based on word occurance(number of occurance in case of continous) in the mail or not.
+			d) proceed to step (a)  again till the list has only spam or nonspam mails.
+	 	->Testing start from root node. If the root word exist (number of occurance in case of continous) and move to left tree or right based on it. This will continue till spam or notspam is reached.
+	3)Assumption and design decision.
+	-	>We have used pickle package for writing and reading the decision tree.
+	4)Result
+		->Binary
+			True Positive:1207
+			True Negative:1270
+			False Positive:128
+			False Negative:81
+
+		->Continous
+			True Positive:1227
+			True Negative:1241
+			False Positive:157
+			False Negative:61
+
 '''
 
 
@@ -112,30 +140,6 @@ elif mode == "test":
     print("False Negative:" + str(false_negative))
 
 '''
-	1)Formulation
-		->We considered each word in a mail as an attribute and each row as a mail.
-		->In the decision tree each node has root element as word and number of occurance(1 in case of binary).It has left and right which point to another decision tree node 			or leaf "spam" or "notsapm"		 
-	2)Working
-		->We iterate over each mail and extract the words and return a list of words for each mail. We construct a dictionary with two keys(spam and notspam). Each item in dictionary is a list of mail. Each list will hold word and number of time it occurs. We follow the below step in recursion.
-			a)We create set of words in both spam and notspam list. 
-			b)calculate the entropy for each attribute(based on whether continous or binary)
-			c) split the list based on word occurance(number of occurance in case of continous) in the mail or not.
-			d) proceed to step (a)  again till the list has only spam or nonspam mails.
-	 	->Testing start from root node. If the root word exist (number of occurance in case of continous) and move to left tree or right based on it. This will continue till spam or notspam is reached.
-	3)Assumption and design decision.
-	-	>We have used pickle package for writing and reading the decision tree. 
-	4)Result
-		->Binary
-			True Positive:1207
-			True Negative:1270
-			False Positive:128
-			False Negative:81
-
-		->Continous
-			True Positive:1227
-			True Negative:1241
-			False Positive:157
-			False Negative:61
 
 	
 
